@@ -4,23 +4,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Invoice</title>
-  <link rel="stylesheet" href="<%= stylePath %>" />
+  <style>
+    <%- styleContent %>
+  </style>
 </head>
 <body class="invoice-page">
   <section class="invoice-sheet">
     <header class="invoice-header">
       <div class="header-top">
         <div class="logo-panel">
-          <% if (logoImagePath) { %>
-            <img src="<%= logoImagePath %>" alt="Header Logo" class="logo-image" />
+          <% if (logoImageSrc) { %>
+            <img src="<%= logoImageSrc %>" alt="Header Logo" class="logo-image" />
           <% } else { %>
             <div class="logo-fallback">SACW YOUTH</div>
           <% } %>
         </div>
 
         <div class="banner-panel">
-          <% if (bannerImagePath) { %>
-            <img src="<%= bannerImagePath %>" alt="Header Banner" class="banner-image" />
+          <% if (bannerImageSrc) { %>
+            <img src="<%= bannerImageSrc %>" alt="Header Banner" class="banner-image" />
           <% } %>
           <div class="banner-overlay"></div>
           <h1>INVOICE</h1>

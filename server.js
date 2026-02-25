@@ -62,7 +62,7 @@ function findFirstExistingImage(filenames) {
     .map((name) => path.join(__dirname, "public", "images", name))
     .find((imgPath) => fs.existsSync(imgPath));
 
-  return existing ? `file://${existing}` : null;
+  return existing || null;
 }
 
 function getHeaderImages() {
@@ -91,6 +91,21 @@ function getHeaderImages() {
   ]);
 
   return { bannerImagePath, logoImagePath };
+}
+
+function imagePathToDataUri(imagePath) {
+  if (!imagePath) return null;
+
+  const extension = path.extname(imagePath).toLowerCase();
+  const mimeType =
+    extension === ".png"
+      ? "image/png"
+      : extension === ".jpg" || extension === ".jpeg"
+        ? "image/jpeg"
+        : "application/octet-stream";
+
+  const base64 = fs.readFileSync(imagePath).toString("base64");
+  return `data:${mimeType};base64,${base64}`;
 }
 
 app.get("/", (req, res) => {
@@ -142,7 +157,10 @@ app.post("/generate", async (req, res) => {
   }
 
   try {
-    const stylePath = `file://${path.join(__dirname, "public", "style.css")}`;
+    const styleContent = fs.readFileSync(
+      path.join(__dirname, "public", "style.css"),
+      "utf8",
+    );
     const selectedMonthsText = selectedMonths.join(", ");
     const headerImages = getHeaderImages();
 
@@ -154,9 +172,9 @@ app.post("/generate", async (req, res) => {
         paymentDate: toDisplayDate(date),
         selectedMonthsText,
         amountText: amount.toFixed(2),
-        stylePath,
-        bannerImagePath: headerImages.bannerImagePath,
-        logoImagePath: headerImages.logoImagePath,
+        styleContent,
+        bannerImageSrc: imagePathToDataUri(headerImages.bannerImagePath),
+        logoImageSrc: imagePathToDataUri(headerImages.logoImagePath),
       },
     );
 
