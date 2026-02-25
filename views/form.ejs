@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Slip Generator</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body class="app-bg">
+  <main class="card">
+    <h1>Payment Slip Generator</h1>
+    <p class="subtitle">Fill in the details to generate a professional PDF invoice.</p>
+
+    <% if (errors && errors.length > 0) { %>
+      <div class="alert" role="alert">
+        <strong>Please fix the following:</strong>
+        <ul>
+          <% errors.forEach(function(error) { %>
+            <li><%= error %></li>
+          <% }) %>
+        </ul>
+      </div>
+    <% } %>
+
+    <form action="/generate" method="POST" class="form-grid">
+      <div class="field">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" value="<%= formData.name %>" required />
+      </div>
+
+      <div class="field">
+        <label for="date">Date</label>
+        <input type="date" id="date" name="date" value="<%= formData.date %>" required />
+      </div>
+
+      <div class="field">
+        <label for="amount">Amount (LKR)</label>
+        <input type="number" id="amount" name="amount" min="0.01" step="0.01" value="<%= formData.amount %>" required />
+      </div>
+
+      <fieldset class="field months-field">
+        <legend>Months</legend>
+        <div class="months-grid">
+          <% months.forEach(function(month) { %>
+            <label class="checkbox-item">
+              <input
+                type="checkbox"
+                name="months"
+                value="<%= month %>"
+                <%= formData.months.includes(month) ? 'checked' : '' %>
+              />
+              <span><%= month %></span>
+            </label>
+          <% }) %>
+        </div>
+      </fieldset>
+
+      <button type="submit" class="btn">Generate & Download PDF</button>
+    </form>
+  </main>
+</body>
+</html>

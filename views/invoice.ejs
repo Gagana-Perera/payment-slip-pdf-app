@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invoice</title>
+  <link rel="stylesheet" href="<%= stylePath %>" />
+</head>
+<body class="invoice-page">
+  <section class="invoice-sheet">
+    <header class="invoice-header">
+      <div class="header-top">
+        <div class="logo-panel">
+          <% if (logoImagePath) { %>
+            <img src="<%= logoImagePath %>" alt="Header Logo" class="logo-image" />
+          <% } else { %>
+            <div class="logo-fallback">SACW YOUTH</div>
+          <% } %>
+        </div>
+
+        <div class="banner-panel">
+          <% if (bannerImagePath) { %>
+            <img src="<%= bannerImagePath %>" alt="Header Banner" class="banner-image" />
+          <% } %>
+          <div class="banner-overlay"></div>
+          <h1>INVOICE</h1>
+        </div>
+      </div>
+
+      <div class="invoice-meta">
+        <div>
+          <span class="meta-label">Invoice Number</span>
+          <strong><%= invoiceNumber %></strong>
+        </div>
+      </div>
+    </header>
+
+    <section class="invoice-details">
+      <p><span class="label">Bill To:</span> <%= customerName %></p>
+      <p><span class="label">Date:</span> <%= paymentDate %></p>
+      <p><span class="label">For:</span> Monthly Subscription - <%= selectedMonthsText %></p>
+    </section>
+
+    <table class="invoice-table">
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Monthly Subscription (<%= selectedMonthsText %>)</td>
+          <td>LKR <%= amountText %></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <section class="totals">
+      <div class="row">
+        <span>Subtotal</span>
+        <strong>LKR <%= amountText %></strong>
+      </div>
+      <div class="row total">
+        <span>Total</span>
+        <strong>LKR <%= amountText %></strong>
+      </div>
+    </section>
+
+    <footer class="invoice-footer">
+      <p>Thank you for your payment.</p>
+      <p>Contact: +94 00 000 0000 | billing@example.com | Company Address Placeholder</p>
+    </footer>
+  </section>
+</body>
+</html>
