@@ -9,70 +9,77 @@
   </style>
 </head>
 <body class="invoice-page">
-  <section class="invoice-sheet">
-    <header class="invoice-header">
-      <div class="header-top">
-        <div class="logo-panel">
-          <% if (logoImageSrc) { %>
-            <img src="<%= logoImageSrc %>" alt="Header Logo" class="logo-image" />
-          <% } else { %>
-            <div class="logo-fallback">SACW YOUTH</div>
-          <% } %>
-        </div>
+  <div class="invoice-sheet">
+    <!-- Header Banner -->
+    <div class="banner-container">
+      <% if (bannerImageSrc) { %>
+        <img src="<%= bannerImageSrc %>" alt="Header Banner" class="banner-image" />
+      <% } %>
+      <% if (logoImageSrc) { %>
+        <img src="<%= logoImageSrc %>" alt="Header Logo" class="logo-image" />
+      <% } %>
+    </div>
 
-        <div class="banner-panel">
-          <% if (bannerImageSrc) { %>
-            <img src="<%= bannerImageSrc %>" alt="Header Banner" class="banner-image" />
-          <% } %>
-          <div class="banner-overlay"></div>
-          <h1>INVOICE</h1>
-        </div>
+    <!-- Title and Date -->
+    <div class="title-section">
+      <div class="invoice-title">Invoice</div>
+      <div class="invoice-date">Date: <%= paymentDate %></div>
+    </div>
+
+    <!-- Info Columns -->
+    <div class="info-columns">
+      <div class="col-left">
+        <div class="info-heading">Bill To</div>
+        <div class="info-value"><%= customerName %></div>
       </div>
-
-      <div class="invoice-meta">
-        <div>
-          <span class="meta-label">Invoice Number</span>
-          <strong><%= invoiceNumber %></strong>
-        </div>
+      <div class="col-right">
+        <div class="info-heading">For</div>
+        <div class="info-value">Monthly subscription</div>
       </div>
-    </header>
+    </div>
 
-    <section class="invoice-details">
-      <p><span class="label">Bill To:</span> <%= customerName %></p>
-      <p><span class="label">Date:</span> <%= paymentDate %></p>
-      <p><span class="label">For:</span> Monthly Subscription - <%= selectedMonthsText %></p>
-    </section>
-
-    <table class="invoice-table">
+    <!-- Items Table -->
+    <table class="items-table">
       <thead>
         <tr>
-          <th>Description</th>
-          <th>Amount</th>
+          <th class="col-desc">Item Description</th>
+          <th class="col-amt">Amount</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td>Monthly Subscription (<%= selectedMonthsText %>)</td>
-          <td>LKR <%= amountText %></td>
+          <td class="desc bordered-cell">Monthly Subscription (<%= selectedMonthsText %> )</td>
+          <td class="amt bordered-cell"><div class="amt-content"><span>LKR</span> <span><%= amountText %></span></div></td>
+        </tr>
+        <tr class="empty-row">
+          <td class="bordered-cell"></td>
+          <td class="bordered-cell"></td>
+        </tr>
+        <tr>
+          <td class="total-label">Subtotal</td>
+          <td class="amt bordered-cell"><div class="amt-content"><span>LKR</span> <span><%= amountText %></span></div></td>
+        </tr>
+        <tr>
+          <td class="total-label">Tax Rate</td>
+          <td class="amt bordered-cell"></td>
+        </tr>
+        <tr>
+          <td class="total-label">Other Costs</td>
+          <td class="amt bordered-cell"></td>
+        </tr>
+        <tr class="total-cost-row">
+          <td class="total-label-dark">Total Cost</td>
+          <td class="amt-dark bordered-cell"><div class="amt-content"><span>LKR</span> <span><%= amountText %></span></div></td>
         </tr>
       </tbody>
     </table>
 
-    <section class="totals">
-      <div class="row">
-        <span>Subtotal</span>
-        <strong>LKR <%= amountText %></strong>
-      </div>
-      <div class="row total">
-        <span>Total</span>
-        <strong>LKR <%= amountText %></strong>
-      </div>
-    </section>
-
-    <footer class="invoice-footer">
-      <p>Thank you for your payment.</p>
-      <p>Contact: +94 00 000 0000 | billing@example.com | Company Address Placeholder</p>
-    </footer>
-  </section>
+    <!-- Footer Notes -->
+    <div class="footer-notes">
+      <p>If you have any questions concerning this invoice, use the following contact information:</p>
+      <p class="contact-info"><a href="mailto:dulshanperera011@gmail.com">Rasantha Dulshan (Treasurer),+94 75 2515524,dulshanperera011@gmail.com</a></p>
+      <p>Thank you for your Contribution!</p>
+    </div>
+  </div>
 </body>
 </html>

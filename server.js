@@ -33,11 +33,10 @@ function toDisplayDate(dateInput) {
   const date = new Date(dateInput);
   if (Number.isNaN(date.getTime())) return "";
 
-  return new Intl.DateTimeFormat("en-LK", {
-    year: "numeric",
-    month: "long",
-    day: "2-digit",
-  }).format(date);
+  const d = String(date.getDate()).padStart(2, "0");
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const y = date.getFullYear();
+  return `${d}/${m}/${y}`;
 }
 
 function sanitizeFilePart(value) {
