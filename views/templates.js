@@ -322,33 +322,34 @@ function renderInvoice({
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Invoice</title>
   <style>
-    /* Basic PDF Styling kept safe for Puppeteer Engine */
-    .invoice-page {
+    /* Exact PDF Styling matching old image layout */
+    body.invoice-page {
       background: #fff;
-      color: #333;
+      color: #000;
       margin: 0;
       padding: 0;
-      font-family: inherit;
+      font-family: Arial, Helvetica, sans-serif;
     }
     .invoice-sheet {
       width: 100%;
       max-width: 800px;
       margin: 0 auto;
-      font-family: inherit;
     }
     .banner-container {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      position: relative;
       margin-bottom: 2rem;
+      width: 100%;
     }
     .banner-image {
-      max-width: 300px;
-      max-height: 80px;
-      object-fit: contain;
+      width: 100%;
+      height: auto;
+      display: block;
     }
     .logo-image {
-      max-width: 150px;
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
       max-height: 80px;
       object-fit: contain;
     }
@@ -356,56 +357,76 @@ function renderInvoice({
       margin-bottom: 2rem;
     }
     .invoice-title {
-      font-size: 2rem;
-      font-weight: bold;
-      color: #111;
-      text-transform: uppercase;
+      font-family: "Times New Roman", Times, serif;
+      font-size: 2.25rem;
+      color: #173d7a;
       margin-bottom: 0.5rem;
+      font-weight: normal;
+    }
+    .invoice-date {
+      font-size: 0.85rem;
+      line-height: 1.4;
     }
     .invoice-date strong {
-      color: #111;
+      color: #000;
+      font-weight: bold;
     }
     .info-columns {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 2rem;
+      margin-bottom: 1rem;
+    }
+    .col-left, .col-right {
+      width: 48%;
     }
     .info-heading {
-      font-weight: bold;
-      color: #666;
-      text-transform: uppercase;
-      font-size: 0.85rem;
-      margin-bottom: 0.2rem;
+      font-family: "Times New Roman", Times, serif;
+      font-size: 1.5rem;
+      color: #173d7a;
+      margin-bottom: 0.4rem;
+      font-weight: normal;
     }
     .info-value {
-      font-size: 1.1rem;
-      color: #111;
+      font-size: 0.95rem;
+      color: #000;
+      font-weight: bold;
     }
     .items-table {
       width: 100%;
       border-collapse: collapse;
       margin-bottom: 2rem;
+      font-size: 0.85rem;
     }
     .items-table th {
-      background-color: #f4f4f4;
-      text-align: left;
-      padding: 10px;
+      background-color: #173d7a;
+      color: #fff;
+      text-align: center;
+      padding: 8px 10px;
       font-weight: bold;
-      border-bottom: 2px solid #ddd;
     }
-    .col-desc { width: 70%; }
-    .col-amt { width: 30%; text-align: right; }
+    .col-desc { width: 70%; text-align: center !important; }
+    .col-amt { width: 30%; text-align: center !important; }
+    
     .bordered-cell {
-      border-bottom: 1px solid #eee;
-      padding: 12px 10px;
+      border: 1px solid #173d7a;
+      padding: 8px 10px;
+    }
+    .border-bottom-only {
+      border-bottom: 1px solid #173d7a;
+      padding: 8px 10px;
+    }
+    .border-top-only {
+      border-top: 1px solid #173d7a;
+      padding: 8px 10px;
     }
     .items-table td.desc {
-      font-weight: 500;
-      color: #333;
+      color: #000;
+      border-left: 1px solid #173d7a;
+      border-right: 1px solid #173d7a;
     }
     .items-table td.amt {
-      text-align: right;
-      color: #333;
+      color: #000;
+      border-right: 1px solid #173d7a;
     }
     .amt-content {
       display: flex;
@@ -413,44 +434,52 @@ function renderInvoice({
     }
     .empty-row td {
       padding: 20px 10px;
+      border-left: 1px solid #173d7a;
+      border-right: 1px solid #173d7a;
+      border-bottom: 1px solid #173d7a;
+    }
+    
+    .totals-wrapper {
+      width: 100%;
+    }
+    
+    .total-row td {
+      padding: 6px 10px;
     }
     .total-label {
       text-align: right;
-      padding: 10px;
-      color: #666;
-      font-weight: bold;
+      color: #000;
+      font-size: 0.8rem;
     }
-    .total-label-dark {
+    .total-label-huge {
       text-align: right;
-      padding: 12px 10px;
-      background-color: #333;
-      color: #fff;
-      font-weight: bold;
-      border-radius: 4px 0 0 4px;
+      color: #173d7a;
+      font-size: 1.1rem;
+      padding: 8px 10px;
+    }
+    .amt-box {
+      border-bottom: 1px solid #173d7a;
+      border-left: 1px solid #173d7a;
+      border-right: 1px solid #173d7a;
     }
     .amt-dark {
-      background-color: #333;
+      background-color: #173d7a;
       color: #fff !important;
-      padding: 12px 10px;
       font-weight: bold;
-      border-radius: 0 4px 4px 0;
+      border: 1px solid #173d7a;
     }
-    .amt-dark .amt-content {
-      display: flex;
-      justify-content: space-between;
-    }
+    
     .footer-notes {
-      border-top: 1px solid #ddd;
-      padding-top: 1.5rem;
-      font-size: 0.9rem;
-      color: #555;
+      margin-top: 3rem;
+      font-size: 0.8rem;
+      color: #000;
+      line-height: 1.6;
     }
     .contact-info {
-      margin: 0.5rem 0;
-      font-weight: 500;
+      margin: 0.2rem 0;
     }
     .contact-info a {
-      color: #111;
+      color: #0070c0;
       text-decoration: none;
     }
     ${styleContent}
@@ -486,28 +515,28 @@ function renderInvoice({
       </thead>
       <tbody>
         <tr>
-          <td class="desc bordered-cell">${escapeHtml(invoiceType)}${selectedMonthsText ? ` (${escapeHtml(selectedMonthsText)})` : ''}</td>
+          <td class="desc bordered-cell" style="text-align: left;">${escapeHtml(invoiceType)}${selectedMonthsText ? ` (${escapeHtml(selectedMonthsText)})` : ''}</td>
           <td class="amt bordered-cell"><div class="amt-content"><span>LKR</span> <span>${escapeHtml(amountText)}</span></div></td>
         </tr>
         <tr class="empty-row">
-          <td class="bordered-cell"></td>
-          <td class="bordered-cell"></td>
+          <td></td>
+          <td></td>
         </tr>
-        <tr>
-          <td class="total-label">Subtotal</td>
-          <td class="amt bordered-cell"><div class="amt-content"><span>LKR</span> <span>${escapeHtml(amountText)}</span></div></td>
+        <tr class="total-row">
+          <td class="total-label border-top-only">Subtotal</td>
+          <td class="amt border-bottom-only"><div class="amt-content"><span>LKR</span> <span>${escapeHtml(amountText)}</span></div></td>
         </tr>
-        <tr>
+        <tr class="total-row">
           <td class="total-label">Tax Rate</td>
-          <td class="amt bordered-cell"></td>
+          <td class="amt border-bottom-only"></td>
         </tr>
-        <tr>
+        <tr class="total-row">
           <td class="total-label">Other Costs</td>
-          <td class="amt bordered-cell"></td>
+          <td class="amt border-bottom-only"></td>
         </tr>
         <tr class="total-cost-row">
-          <td class="total-label-dark">Total Cost</td>
-          <td class="amt-dark bordered-cell"><div class="amt-content"><span>LKR</span> <span>${escapeHtml(amountText)}</span></div></td>
+          <td class="total-label-huge">Total Cost</td>
+          <td class="amt-dark"><div class="amt-content"><span>LKR</span> <span>${escapeHtml(amountText)}</span></div></td>
         </tr>
       </tbody>
     </table>
