@@ -301,19 +301,26 @@ function renderForm({ errors = [], formData = {}, months = [] }) {
 </html>`;
 }
 
-function renderInvoice({
-  invoiceNumber,
-  customerName,
-  paymentDate,
-  invoiceType,
-  selectedMonthsText,
-  amountText,
-  styleContent,
-  bannerImageSrc,
-  logoImageSrc
-}) {
-  const bannerImageHtml = bannerImageSrc ? `<img src="${bannerImageSrc}" alt="Header Banner" class="banner-image" />` : '';
-  const logoImageHtml = logoImageSrc ? `<img src="${logoImageSrc}" alt="Header Logo" class="logo-image" />` : '';
+// renderInvoice is responsible for generating the HTML for the PDF invoice
+const renderInvoice = (data, styleContent, bannerImage, logoImage) => {
+  const { invoiceType, name, date, amount, months } = data;
+  
+  // Format amount with commas
+  const amountNum = parseFloat(amount);
+  const amountText = !isNaN(amountNum) ? amountNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : amount;
+
+  // Format months
+  let selectedMonthsText = '';
+  if (invoiceType === 'Monthly Subscription' && Array.isArray(months) && months.length > 0) {
+    if (months.length === 1) {
+      selectedMonthsText = months[0];
+    } else {
+      selectedMonthsText = `${months[0]} - ${months[months.length - 1]}`;
+    }
+  }
+
+  // Use a simpler date format directly without invoice number
+  const formattedDate = date ? new Date(date).toLocaleDateString('en-GB') : '';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -322,7 +329,7 @@ function renderInvoice({
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Invoice</title>
   <style>
-    /* Exact PDF Styling matching old image layout */
+    /* Exact PDF Styling matching user layout provided */
     body.invoice-page {
       background: #fff;
       color: #000;
@@ -334,10 +341,12 @@ function renderInvoice({
       width: 100%;
       max-width: 800px;
       margin: 0 auto;
+      padding: 20px;
+      box-sizing: border-box;
     }
     .banner-container {
       position: relative;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
       width: 100%;
     }
     .banner-image {
@@ -347,29 +356,26 @@ function renderInvoice({
     }
     .logo-image {
       position: absolute;
-      right: 20px;
+      right: 30px;
       top: 50%;
       transform: translateY(-50%);
-      max-height: 80px;
+      max-height: 90px;
       object-fit: contain;
     }
     .title-section {
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
     .invoice-title {
-      font-family: "Times New Roman", Times, serif;
+      font-family: Georgia, "Times New Roman", Times, serif;
       font-size: 2.25rem;
-      color: #173d7a;
-      margin-bottom: 0.5rem;
+      color: #1a427a;
+      margin-bottom: 0.2rem;
       font-weight: normal;
     }
     .invoice-date {
-      font-size: 0.85rem;
+      font-size: 0.95rem;
       line-height: 1.4;
-    }
-    .invoice-date strong {
       color: #000;
-      font-weight: bold;
     }
     .info-columns {
       display: flex;
@@ -380,107 +386,115 @@ function renderInvoice({
       width: 48%;
     }
     .info-heading {
-      font-family: "Times New Roman", Times, serif;
-      font-size: 1.5rem;
-      color: #173d7a;
-      margin-bottom: 0.4rem;
+      font-family: Georgia, "Times New Roman", Times, serif;
+      font-size: 1.75rem;
+      color: #1a427a;
+      margin-bottom: 0.2rem;
       font-weight: normal;
     }
     .info-value {
       font-size: 0.95rem;
       color: #000;
-      font-weight: bold;
+      font-weight: normal;
     }
     .items-table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 2rem;
-      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
     }
     .items-table th {
-      background-color: #173d7a;
+      background-color: #0f3964; /* Very deep blue */
       color: #fff;
       text-align: center;
       padding: 8px 10px;
       font-weight: bold;
+      border: 1px solid #0f3964;
     }
-    .col-desc { width: 70%; text-align: center !important; }
-    .col-amt { width: 30%; text-align: center !important; }
+    .items-table th.col-amt {
+      border-left: 1px solid #fff; /* White separator line */
+    }
+    .col-desc { width: 66%; text-align: center !important; }
+    .col-amt { width: 34%; text-align: center !important; }
     
-    .bordered-cell {
-      border: 1px solid #173d7a;
-      padding: 8px 10px;
-    }
-    .border-bottom-only {
-      border-bottom: 1px solid #173d7a;
-      padding: 8px 10px;
-    }
-    .border-top-only {
-      border-top: 1px solid #173d7a;
-      padding: 8px 10px;
+    .items-table td {
+      vertical-align: top;
     }
     .items-table td.desc {
       color: #000;
-      border-left: 1px solid #173d7a;
-      border-right: 1px solid #173d7a;
+      border-left: 1px solid #0f3964;
+      border-right: 1px solid #0f3964;
+      padding: 8px 10px;
     }
     .items-table td.amt {
       color: #000;
-      border-right: 1px solid #173d7a;
+      border-right: 1px solid #0f3964;
+      padding: 8px 10px;
+    }
+    .empty-row td.desc {
+      padding: 15px 10px;
+      background-color: #f0f4f8; /* Light blueish grey */
+      border-bottom: 2px solid #0f3964;
+      border-left: 1px solid #0f3964;
+      border-right: 1px solid #0f3964;
+    }
+    .empty-row td.amt {
+      padding: 15px 10px;
+      background-color: #f0f4f8;
+      border-bottom: 2px solid #0f3964;
+      border-right: 1px solid #0f3964;
+    }
+    
+    .total-row td {
+      padding: 8px 10px;
+    }
+    .total-label {
+      text-align: right;
+      color: #2b4566;
+      font-size: 0.9rem;
+      border: none;
+      padding-right: 15px;
+    }
+    .amt-box {
+      border-bottom: 1px solid #0f3964;
+      border-left: 1px solid #0f3964;
+      border-right: 1px solid #0f3964;
+      padding: 8px 10px;
+    }
+    .total-cost-row td {
+      padding: 8px 10px;
+      vertical-align: middle;
+    }
+    .total-label-huge {
+      text-align: right;
+      color: #2b4566;
+      font-size: 1.45rem;
+      border: none;
+      padding-right: 15px;
+    }
+    .amt-dark {
+      background-color: #2b5080;
+      color: #fff !important;
+      border: 1px solid #2b5080;
+      padding: 8px 10px;
     }
     .amt-content {
       display: flex;
       justify-content: space-between;
     }
-    .empty-row td {
-      padding: 20px 10px;
-      border-left: 1px solid #173d7a;
-      border-right: 1px solid #173d7a;
-      border-bottom: 1px solid #173d7a;
-    }
-    
-    .totals-wrapper {
-      width: 100%;
-    }
-    
-    .total-row td {
-      padding: 6px 10px;
-    }
-    .total-label {
-      text-align: right;
-      color: #000;
-      font-size: 0.8rem;
-    }
-    .total-label-huge {
-      text-align: right;
-      color: #173d7a;
-      font-size: 1.1rem;
-      padding: 8px 10px;
-    }
-    .amt-box {
-      border-bottom: 1px solid #173d7a;
-      border-left: 1px solid #173d7a;
-      border-right: 1px solid #173d7a;
-    }
-    .amt-dark {
-      background-color: #173d7a;
-      color: #fff !important;
-      font-weight: bold;
-      border: 1px solid #173d7a;
-    }
     
     .footer-notes {
-      margin-top: 3rem;
-      font-size: 0.8rem;
+      margin-top: 1rem;
+      font-size: 0.85rem;
       color: #000;
-      line-height: 1.6;
+      line-height: 1.4;
     }
     .contact-info {
       margin: 0.2rem 0;
     }
     .contact-info a {
-      color: #0070c0;
-      text-decoration: none;
+      color: #229fd9;
+      text-decoration: underline;
     }
     ${styleContent}
   </style>
@@ -488,24 +502,28 @@ function renderInvoice({
 <body class="invoice-page">
   <div class="invoice-sheet">
     <div class="banner-container">
-      ${bannerImageHtml}
-      ${logoImageHtml}
+      ${bannerImage ? `<img src="${bannerImage}" alt="Banner" class="banner-image" />` : ''}
+      ${logoImage ? `<img src="${logoImage}" alt="Logo" class="logo-image" />` : ''}
     </div>
-    <div class="title-section">
-      <div class="invoice-title">Invoice</div>
-      <div class="invoice-date">Invoice No: <strong>${escapeHtml(invoiceNumber)}</strong></div>
-      <div class="invoice-date">Date: <strong>${escapeHtml(paymentDate)}</strong></div>
-    </div>
+
+    <header class="title-section">
+      <h1 class="invoice-title">Invoice</h1>
+      <div class="invoice-date">
+        Date: ${escapeHtml(formattedDate)}
+      </div>
+    </header>
+
     <div class="info-columns">
       <div class="col-left">
-        <div class="info-heading">Bill To</div>
-        <div class="info-value">${escapeHtml(customerName)}</div>
+        <h2 class="info-heading">Bill To</h2>
+        <div class="info-value">${escapeHtml(name)}</div>
       </div>
       <div class="col-right">
-        <div class="info-heading">For</div>
+        <h2 class="info-heading">For</h2>
         <div class="info-value">${escapeHtml(invoiceType)}</div>
       </div>
     </div>
+
     <table class="items-table">
       <thead>
         <tr>
@@ -515,24 +533,27 @@ function renderInvoice({
       </thead>
       <tbody>
         <tr>
-          <td class="desc bordered-cell" style="text-align: left;">${escapeHtml(invoiceType)}${selectedMonthsText ? ` (${escapeHtml(selectedMonthsText)})` : ''}</td>
-          <td class="amt bordered-cell"><div class="amt-content"><span>LKR</span> <span>${escapeHtml(amountText)}</span></div></td>
+          <td class="desc" style="text-align: left;">
+            ${escapeHtml(invoiceType === 'Monthly Subscription' ? 'Monthly Subscription' : 'T-Shirt Payment')}
+            ${selectedMonthsText ? ` (${escapeHtml(selectedMonthsText)})` : ''}
+          </td>
+          <td class="amt"><div class="amt-content"><span>LKR</span> <span>${escapeHtml(amountText)}</span></div></td>
         </tr>
         <tr class="empty-row">
-          <td></td>
-          <td></td>
+          <td class="desc"></td>
+          <td class="amt"></td>
         </tr>
         <tr class="total-row">
-          <td class="total-label border-top-only">Subtotal</td>
-          <td class="amt border-bottom-only"><div class="amt-content"><span>LKR</span> <span>${escapeHtml(amountText)}</span></div></td>
+          <td class="total-label">Subtotal</td>
+          <td class="amt-box"><div class="amt-content"><span>LKR</span> <span>${escapeHtml(amountText)}</span></div></td>
         </tr>
         <tr class="total-row">
           <td class="total-label">Tax Rate</td>
-          <td class="amt border-bottom-only"></td>
+          <td class="amt-box"></td>
         </tr>
         <tr class="total-row">
           <td class="total-label">Other Costs</td>
-          <td class="amt border-bottom-only"></td>
+          <td class="amt-box"></td>
         </tr>
         <tr class="total-cost-row">
           <td class="total-label-huge">Total Cost</td>
@@ -540,6 +561,7 @@ function renderInvoice({
         </tr>
       </tbody>
     </table>
+
     <div class="footer-notes">
       <p>If you have any questions concerning this invoice, use the following contact information:</p>
       <p class="contact-info"><a href="mailto:dulshanperera011@gmail.com">Rasantha Dulshan (Treasurer), +94 75 2515524, dulshanperera011@gmail.com</a></p>
@@ -548,7 +570,7 @@ function renderInvoice({
   </div>
 </body>
 </html>`;
-}
+};
 
 module.exports = {
   renderForm,
