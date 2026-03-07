@@ -8,7 +8,7 @@ function escapeHtml(unsafe) {
     .replace(/'/g, "&#039;");
 }
 
-function renderForm({ errors = [], formData = {}, months = [] }) {
+function renderForm({ errors = [], formData = {}, months = [], user = 'Board Member' }) {
   const { name = "", date = "", amount = "", invoiceType = "Monthly Subscription", months: selectedMonths = [] } = formData;
   
   const errorHtml = errors.length > 0 ? `
@@ -60,11 +60,19 @@ function renderForm({ errors = [], formData = {}, months = [] }) {
         
         <!-- Left Column: Command Form -->
         <main class="control-panel staggered-1">
-          <header class="panel-header">
-            <h1 class="header-title">
-              Payment Data <br /> Configuration
-            </h1>
-            <p class="header-subtitle">Secure terminal for generating verified PDF ledger records.</p>
+          <header class="panel-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <h1 class="header-title">
+                Payment Data <br /> Configuration
+              </h1>
+              <p class="header-subtitle">Secure terminal. Authorized as: <span style="color: #a5b4fc;">${escapeHtml(user)}</span></p>
+            </div>
+            <a href="/logout" class="btn-generate" style="padding: 0.6rem 1.2rem; font-size: 0.85rem; background: rgba(220, 38, 38, 0.15); border-color: rgba(220, 38, 38, 0.4); text-decoration: none;">
+              <span class="btn-content" style="color: #fca5a5;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                Secure Sign Out
+              </span>
+            </a>
           </header>
 
           ${errorHtml}

@@ -2,7 +2,10 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const puppeteer = require("puppeteer");
+const session = require("express-session");
+const bcrypt = require("bcrypt");
 const { renderForm, renderInvoice } = require("./views/templates");
+const { renderAuthPage } = require("./views/authTemplates");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -21,8 +24,122 @@ const MONTHS = [
   "December",
 ];
 
+const USERS_FILE_PATH = path.join(__dirname, "data", "users.json");
+
+if (!fs.existsSync(path.join(__dirname, "data"))) {
+  fs.mkdirSync(path.join(__dirname, "data"));
+}
+if (!fs.existsSync(USERS_FILE_PATH)) {
+  fs.writeFileSync(USERS_FILE_PATH, JSON.stringify([]));
+}
+
+function loadUsers() {
+  try {
+    const data = fs.readFileSync(USERS_FILE_PATH, "utf8");
+    return JSON.parse(data);
+  } catch (err) {
+    return [];
+  }
+}
+
+function saveUsers(users) {
+  fs.writeFileSync(USERS_FILE_PATH, JSON.stringify(users, null, 2));
+}
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
+
+app.use(session({
+  secret: 'nexus-board-secret-key-super-secure',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    maxAge: 1000 * 60 * 60 * 24, // 1 Day
+    secure: false // Set to true if using HTTPS
+  }
+}));
+
+// Authentication Middleware
+function requireAuth(req, res, next) {
+  if (req.session && req.session.userId) {
+    return next();
+  } else {
+    return res.redirect("/login");
+  }
+}
+
+app.get("/login", (req, res) => {
+  if (req.session && req.session.userId) return res.redirect("/");
+  res.send(renderAuthPage({ type: 'login', errors: [] }));
+});
+
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+  const errors = [];
+  
+  if (!username || !password) {
+    errors.push("Username and Password are required.");
+    return res.send(renderAuthPage({ type: 'login', errors, formData: { username } }));
+  }
+
+  const users = loadUsers();
+  const user = users.find(u => u.username === username);
+
+  if (user) {
+    const match = await bcrypt.compare(password, user.passwordHash);
+    if (match) {
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      return res.redirect("/");
+    }
+  }
+
+  errors.push("Invalid credentials or unauthorized access.");
+  res.send(renderAuthPage({ type: 'login', errors, formData: { username } }));
+});
+
+app.get("/register", (req, res) => {
+  if (req.session && req.session.userId) return res.redirect("/");
+  res.send(renderAuthPage({ type: 'register', errors: [] }));
+});
+
+app.post("/register", async (req, res) => {
+  const { username, password, confirmPassword } = req.body;
+  const errors = [];
+
+  if (!username || !password || !confirmPassword) errors.push("All fields are required.");
+  if (password !== confirmPassword) errors.push("Passwords do not match.");
+  if (password.length < 5) errors.push("Access Key must be at least 5 characters.");
+
+  if (errors.length > 0) {
+    return res.send(renderAuthPage({ type: 'register', errors, formData: { username } }));
+  }
+
+  const users = loadUsers();
+  if (users.find(u => u.username === username)) {
+    errors.push("System ID already allocated.");
+    return res.send(renderAuthPage({ type: 'register', errors, formData: { username } }));
+  }
+
+  try {
+    const passwordHash = await bcrypt.hash(password, 10);
+    users.push({
+      id: Date.now().toString(),
+      username,
+      passwordHash
+    });
+    saveUsers(users);
+    res.redirect("/login");
+  } catch (err) {
+    errors.push("Internal system fault during registration.");
+    res.send(renderAuthPage({ type: 'register', errors, formData: { username } }));
+  }
+});
+
+app.get("/logout", (req, res) => {
+  req.session.destroy();
+  res.redirect("/login");
+});
 
 function toDisplayDate(dateInput) {
   if (!dateInput) return "";
@@ -103,15 +220,16 @@ function imagePathToDataUri(imagePath) {
   return `data:${mimeType};base64,${base64}`;
 }
 
-app.get("/", (req, res) => {
+app.get("/", requireAuth, (req, res) => {
   res.send(renderForm({
     errors: [],
     formData: { name: "", date: "", amount: "", invoiceType: "Monthly Subscription", months: [] },
     months: MONTHS,
+    user: req.session.username
   }));
 });
 
-app.post("/generate", async (req, res) => {
+app.post("/generate", requireAuth, async (req, res) => {
   const errors = [];
 
   const name = (req.body.name || "").trim();
