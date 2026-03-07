@@ -12,15 +12,15 @@ function renderForm({ errors = [], formData = {}, months = [] }) {
   const { name = "", date = "", amount = "", invoiceType = "Monthly Subscription", months: selectedMonths = [] } = formData;
   
   const errorHtml = errors.length > 0 ? `
-      <div class="alert" role="alert">
-        <strong>Please fix the following issues:</strong>
+      <div class="alert fade-in" role="alert">
+        <strong><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> Authentication / Input Error</strong>
         <ul>
           ${errors.map(err => `<li>${escapeHtml(err)}</li>`).join("\\n          ")}
         </ul>
       </div>` : '';
 
   const monthsHtml = months.map(month => `
-            <label class="checkbox-item ${selectedMonths.includes(month) ? 'checked' : ''}">
+            <label class="chip ${selectedMonths.includes(month) ? 'checked' : ''}">
               <input
                 type="checkbox"
                 name="months"
@@ -28,7 +28,7 @@ function renderForm({ errors = [], formData = {}, months = [] }) {
                 class="sr-only"
                 ${selectedMonths.includes(month) ? 'checked' : ''}
               />
-              <span>${escapeHtml(month)}</span>
+              <span class="chip-text">${escapeHtml(month)}</span>
             </label>`).join("");
 
   return `<!DOCTYPE html>
@@ -36,121 +36,162 @@ function renderForm({ errors = [], formData = {}, months = [] }) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Payment Slip Generator</title>
+  <title>Payment Slip Generator | Nexus System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css" />
 </head>
-<body class="app-bg">
-  <div class="blob blob-1"></div>
-  <div class="blob blob-2"></div>
+<body class="theme-dark">
+  <!-- Cinematic Background Elements -->
+  <div class="bg-orb orb-primary"></div>
+  <div class="bg-orb orb-secondary"></div>
+  <div class="bg-orb orb-accent"></div>
+  <div class="bg-noise"></div>
+  <div class="bg-grid"></div>
 
-  <div class="dashboard-container">
-    <div class="card layout-grid">
+  <div class="global-container">
+    
+    <!-- Glassmorphic Dashboard Shell -->
+    <div class="shell fade-up">
+      <div class="shell-highlight-top"></div>
       
-      <!-- Left Column: Form -->
-      <section class="form-section">
-        <div class="form-header">
-          <div class="badge">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-zap"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-            Professional Invoice Generator
-          </div>
-          <h1>Payment Slip Generator</h1>
-          <p class="subtitle">Fill in the details below to instantly generate a high-quality PDF invoice for your records.</p>
-        </div>
-
-        ${errorHtml}
-
-        <form action="/generate" method="POST" class="form-content" id="paymentForm">
-          <div class="field">
-            <label for="invoiceType">Invoice Type</label>
-            <div class="select-wrapper">
-              <select id="invoiceType" name="invoiceType" required>
-                <option value="Monthly Subscription" ${invoiceType === 'Monthly Subscription' ? 'selected' : ''}>Monthly Subscription</option>
-                <option value="T-Shirt Payment" ${invoiceType === 'T-Shirt Payment' ? 'selected' : ''}>T-Shirt Payment</option>
-              </select>
+      <div class="dashboard-grid">
+        
+        <!-- Left Column: Command Form -->
+        <main class="control-panel staggered-1">
+          <header class="panel-header">
+            <div class="luxury-badge">
+              <span class="badge-dot"></span>
+              AI-READY PAYMENT SYSTEM
             </div>
-            <p class="helper-text">Select the category for this payment.</p>
-          </div>
+            <h1 class="header-title">
+              Payment Data <br /> Configuration
+            </h1>
+            <p class="header-subtitle">Secure terminal for generating verified PDF ledger records.</p>
+          </header>
 
-          <div class="field-row">
-            <div class="field">
-              <label for="name">Customer Name</label>
-              <input type="text" id="name" name="name" placeholder="E.g. Jane Doe" value="${escapeHtml(name)}" required />
-            </div>
+          ${errorHtml}
 
-            <div class="field">
-              <label for="date">Invoice Date</label>
-              <input type="date" id="date" name="date" value="${escapeHtml(date)}" required />
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="amount">Total Amount</label>
-            <div class="input-with-prefix">
-              <span class="prefix">LKR</span>
-              <input type="number" id="amount" name="amount" min="0.01" step="0.01" placeholder="0.00" value="${escapeHtml(amount)}" required />
-            </div>
-          </div>
-
-          <fieldset class="field months-field fade-in" id="monthsFieldset" style="${invoiceType === 'T-Shirt Payment' ? 'display: none;' : ''}">
-            <legend>Applicable Months</legend>
-            <div class="months-grid">
-              ${monthsHtml}
-            </div>
-          </fieldset>
-
-          <button type="submit" class="btn btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            Generate & Download PDF
-          </button>
-        </form>
-      </section>
-
-      <!-- Right Column: Live Summary / Preview-->
-      <aside class="summary-section">
-        <div class="summary-card">
-          <div class="summary-header">
-            <h3>Invoice Summary</h3>
-            <span class="status-badge">Live Preview</span>
-          </div>
-
-          <div class="summary-content">
-            <div class="summary-item">
-              <span class="label">Invoice Type</span>
-              <span class="value" id="preview-type">${escapeHtml(invoiceType)}</span>
-            </div>
-            <div class="summary-item">
-              <span class="label">Billed To</span>
-              <span class="value" id="preview-name">${name ? escapeHtml(name) : '<span class="empty-placeholder">Not specified</span>'}</span>
-            </div>
-            <div class="summary-item">
-              <span class="label">Date</span>
-              <span class="value" id="preview-date">${date ? escapeHtml(date) : '<span class="empty-placeholder">Not specified</span>'}</span>
-            </div>
-            <div class="summary-item" id="preview-months-container" style="${invoiceType === 'T-Shirt Payment' ? 'display: none;' : ''}">
-              <span class="label">Months Covered</span>
-              <div class="value tags-container" id="preview-months">
-                ${selectedMonths.length > 0 ? selectedMonths.map(m => `<span class="tag">${escapeHtml(m)}</span>`).join('') : '<span class="empty-placeholder">None selected</span>'}
+          <form action="/generate" method="POST" class="form-grid" id="paymentForm">
+            
+            <div class="input-group">
+              <label for="invoiceType">Transaction Classification</label>
+              <div class="select-glow-wrapper">
+                <select id="invoiceType" name="invoiceType" class="glass-input" required>
+                  <option value="Monthly Subscription" ${invoiceType === 'Monthly Subscription' ? 'selected' : ''}>Monthly Subscription</option>
+                  <option value="T-Shirt Payment" ${invoiceType === 'T-Shirt Payment' ? 'selected' : ''}>T-Shirt Payment</option>
+                </select>
               </div>
             </div>
-            
-            <hr class="summary-divider" />
-            
-            <div class="summary-item total-row">
-              <span class="label">Total Amount</span>
-              <span class="value amount-huge">LKR <span id="preview-amount">${amount ? escapeHtml(amount) : '0.00'}</span></span>
+
+            <div class="input-row">
+              <div class="input-group">
+                <label for="name">Entity / Customer Name</label>
+                <div class="input-glow-wrapper">
+                  <input type="text" id="name" name="name" class="glass-input" placeholder="e.g. John Doe" value="${escapeHtml(name)}" required autocomplete="off" />
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label for="date">Ledger Date</label>
+                <div class="input-glow-wrapper">
+                  <input type="date" id="date" name="date" class="glass-input" value="${escapeHtml(date)}" required />
+                </div>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="amount">Settlement Amount</label>
+              <div class="input-glow-wrapper with-prefix">
+                <span class="currency-prefix">LKR</span>
+                <input type="number" id="amount" name="amount" class="glass-input amount-input" min="0.01" step="0.01" placeholder="0.00" value="${escapeHtml(amount)}" required />
+              </div>
+            </div>
+
+            <fieldset class="input-group months-group fade-in" id="monthsFieldset" style="${invoiceType === 'T-Shirt Payment' ? 'display: none;' : ''}">
+              <legend>Billing Cycles</legend>
+              <div class="chip-grid">
+                ${monthsHtml}
+              </div>
+            </fieldset>
+
+            <div class="action-bar">
+              <button type="submit" class="btn-generate">
+                <span class="btn-glow-effect"></span>
+                <span class="btn-content">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  Sign & Download PDF
+                </span>
+              </button>
+            </div>
+          </form>
+        </main>
+
+        <!-- Right Column: Cinematic Live Hologram/Preview -->
+        <aside class="preview-panel staggered-2">
+          
+          <div class="hologram-card">
+            <div class="hologram-border"></div>
+            <div class="hologram-glass">
+              
+              <div class="holo-header">
+                <div class="brand">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="brand-icon"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                  <span class="brand-text">NEXUS INVOICE</span>
+                </div>
+                <div class="status-live">
+                  <span class="status-dot-pulse"></span>
+                  LIVE SYNC
+                </div>
+              </div>
+
+              <div class="holo-body">
+                <div class="data-block">
+                  <div class="data-label">TRANSACTION TYPE</div>
+                  <div class="data-value highlight" id="preview-type">${escapeHtml(invoiceType)}</div>
+                </div>
+
+                <div class="data-block">
+                  <div class="data-label">ISSUED TO</div>
+                  <div class="data-value" id="preview-name">${name ? escapeHtml(name) : '<span class="empty-data">Awaiting Input...</span>'}</div>
+                </div>
+
+                <div class="data-row">
+                  <div class="data-block">
+                    <div class="data-label">TIMESTAMP</div>
+                    <div class="data-value" id="preview-date">${date ? escapeHtml(date) : '<span class="empty-data">-- / -- / ----</span>'}</div>
+                  </div>
+                </div>
+
+                <div class="data-block" id="preview-months-container" style="${invoiceType === 'T-Shirt Payment' ? 'display: none;' : ''}">
+                  <div class="data-label">CYCLES COVERED</div>
+                  <div class="data-tags" id="preview-months">
+                    ${selectedMonths.length > 0 ? selectedMonths.map(m => `<span class="holo-tag">${escapeHtml(m)}</span>`).join('') : '<span class="empty-data">None detected</span>'}
+                  </div>
+                </div>
+                
+                <div class="divider-line"></div>
+                
+                <div class="data-block total-block">
+                  <div class="data-label">AMOUNT DUE</div>
+                  <div class="data-value amount-display">
+                    <span class="currency-tag">LKR</span> 
+                    <span id="preview-amount">${amount ? escapeHtml(amount) : '0.00'}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="holo-footer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                Secure 256-bit AES Encryption
+              </div>
             </div>
           </div>
-          
-          <div class="summary-footer">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-shield"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            Secure PDF Generation
-          </div>
-        </div>
-      </aside>
 
+        </aside>
+
+      </div>
     </div>
   </div>
 
@@ -171,15 +212,28 @@ function renderForm({ errors = [], formData = {}, months = [] }) {
       const previewMonths = document.getElementById("preview-months");
       const previewMonthsContainer = document.getElementById("preview-months-container");
 
+      // Smooth type tracking
       function toggleMonthsVisibility() {
-        if (invoiceTypeSelect.value === "T-Shirt Payment") {
-          monthsFieldset.style.display = "none";
-          previewMonthsContainer.style.display = "none";
-        } else {
-          monthsFieldset.style.display = "block";
-          previewMonthsContainer.style.display = "flex";
-        }
-        previewType.textContent = invoiceTypeSelect.value;
+        // trigger subtle reflow animation
+        monthsFieldset.style.opacity = '0';
+        previewMonthsContainer.style.opacity = '0';
+        
+        setTimeout(() => {
+          if (invoiceTypeSelect.value === "T-Shirt Payment") {
+            monthsFieldset.style.display = "none";
+            previewMonthsContainer.style.display = "none";
+          } else {
+            monthsFieldset.style.display = "block";
+            previewMonthsContainer.style.display = "flex";
+            
+            // Fade block back in
+            setTimeout(() => {
+              monthsFieldset.style.opacity = '1';
+              previewMonthsContainer.style.opacity = '1';
+            }, 50);
+          }
+          previewType.textContent = invoiceTypeSelect.value;
+        }, 200);
       }
 
       function updatePreviewName() {
@@ -187,7 +241,7 @@ function renderForm({ errors = [], formData = {}, months = [] }) {
         if (val) {
           previewName.textContent = val;
         } else {
-          previewName.innerHTML = '<span class="empty-placeholder">Not specified</span>';
+          previewName.innerHTML = '<span class="empty-data">Awaiting Input...</span>';
         }
       }
 
@@ -196,21 +250,22 @@ function renderForm({ errors = [], formData = {}, months = [] }) {
         if (val) {
           previewDate.textContent = val;
         } else {
-          previewDate.innerHTML = '<span class="empty-placeholder">Not specified</span>';
+          previewDate.innerHTML = '<span class="empty-data">-- / -- / ----</span>';
         }
       }
 
       function updatePreviewAmount() {
         const val = amountInput.value;
         if (val) {
-          previewAmount.textContent = Number(val).toFixed(2);
+          const formatted = Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          previewAmount.textContent = formatted;
         } else {
           previewAmount.textContent = '0.00';
         }
       }
 
       function toggleMonthStyles(checkbox) {
-         const label = checkbox.closest('.checkbox-item');
+         const label = checkbox.closest('.chip');
          if(checkbox.checked) {
             label.classList.add('checked');
          } else {
@@ -221,9 +276,9 @@ function renderForm({ errors = [], formData = {}, months = [] }) {
       function updatePreviewMonths() {
         const selected = Array.from(monthCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
         if (selected.length > 0) {
-          previewMonths.innerHTML = selected.map(m => \`<span class="tag">\${m}</span>\`).join('');
+          previewMonths.innerHTML = selected.map(m => \`<span class="holo-tag">\${m}</span>\`).join('');
         } else {
-          previewMonths.innerHTML = '<span class="empty-placeholder">None selected</span>';
+          previewMonths.innerHTML = '<span class="empty-data">None detected</span>';
         }
       }
 
@@ -239,7 +294,7 @@ function renderForm({ errors = [], formData = {}, months = [] }) {
         });
       });
       
-      // Initialize layout correctness upon load (in case of cached inputs)
+      // Initialize view
       updatePreviewName();
       updatePreviewDate();
       updatePreviewAmount();
@@ -271,25 +326,47 @@ function renderInvoice({
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Invoice</title>
   <style>
-    ${styleContent}
+    /* Basic PDF Styling kept safe for Puppeteer Engine */
+    .invoice-page { background: #fff; color: #333; margin: 0; padding: 0; font-family: sans-serif; }
+    .invoice-sheet { width: 100%; max-width: 800px; margin: 0 auto; }
+    .banner-container { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
+    .banner-image { max-width: 300px; max-height: 80px; object-fit: contain; }
+    .logo-image { max-width: 150px; max-height: 80px; object-fit: contain; }
+    .title-section { margin-bottom: 2rem; }
+    .invoice-title { font-size: 2rem; font-weight: bold; color: #111; text-transform: uppercase; margin-bottom: 0.5rem; }
+    .invoice-date strong { color: #111; }
+    .info-columns { display: flex; justify-content: space-between; margin-bottom: 2rem; }
+    .info-heading { font-weight: bold; color: #666; text-transform: uppercase; font-size: 0.85rem; margin-bottom: 0.2rem; }
+    .info-value { font-size: 1.1rem; color: #111; }
+    .items-table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
+    .items-table th { background-color: #f4f4f4; text-align: left; padding: 10px; font-weight: bold; border-bottom: 2px solid #ddd; }
+    .col-desc { width: 70%; }
+    .col-amt { width: 30%; text-align: right; }
+    .bordered-cell { border-bottom: 1px solid #eee; padding: 12px 10px; }
+    .items-table td.desc { font-weight: 500; color: #333; }
+    .items-table td.amt { text-align: right; color: #333; }
+    .amt-content { display: flex; justify-content: space-between; }
+    .total-label { text-align: right; padding: 10px; color: #666; font-weight: bold; }
+    .empty-row td { padding: 20px 10px; }
+    .total-label-dark { text-align: right; padding: 12px 10px; background-color: #333; color: #fff; font-weight: bold; border-radius: 4px 0 0 4px; }
+    .amt-dark { background-color: #333; color: #fff !important; padding: 12px 10px; font-weight: bold; border-radius: 0 4px 4px 0; }
+    .amt-dark .amt-content { display: flex; justify-content: space-between; }
+    .footer-notes { border-top: 1px solid #ddd; padding-top: 1.5rem; font-size: 0.9rem; color: #555; }
+    .contact-info { margin: 0.5rem 0; font-weight: 500; }
+    .contact-info a { color: #111; text-decoration: none; }
   </style>
 </head>
 <body class="invoice-page">
   <div class="invoice-sheet">
-    <!-- Header Banner -->
     <div class="banner-container">
       ${bannerImageHtml}
       ${logoImageHtml}
     </div>
-
-    <!-- Title and Date -->
     <div class="title-section">
       <div class="invoice-title">Invoice</div>
       <div class="invoice-date">Invoice No: <strong>${escapeHtml(invoiceNumber)}</strong></div>
       <div class="invoice-date">Date: <strong>${escapeHtml(paymentDate)}</strong></div>
     </div>
-
-    <!-- Info Columns -->
     <div class="info-columns">
       <div class="col-left">
         <div class="info-heading">Bill To</div>
@@ -300,8 +377,6 @@ function renderInvoice({
         <div class="info-value">${escapeHtml(invoiceType)}</div>
       </div>
     </div>
-
-    <!-- Items Table -->
     <table class="items-table">
       <thead>
         <tr>
@@ -336,8 +411,6 @@ function renderInvoice({
         </tr>
       </tbody>
     </table>
-
-    <!-- Footer Notes -->
     <div class="footer-notes">
       <p>If you have any questions concerning this invoice, use the following contact information:</p>
       <p class="contact-info"><a href="mailto:dulshanperera011@gmail.com">Rasantha Dulshan (Treasurer), +94 75 2515524, dulshanperera011@gmail.com</a></p>
