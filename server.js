@@ -1,9 +1,11 @@
+require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const puppeteer = require("puppeteer");
 const session = require("express-session");
 const bcrypt = require("bcrypt");
+const nodemailer = require("nodemailer");
 const { renderForm, renderInvoice } = require("./views/templates");
 const { renderAuthPage } = require("./views/authTemplates");
 const app = express();
@@ -59,6 +61,15 @@ app.use(session({
   }
 }));
 
+// Setup Email Transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail', // Standardizing on Gmail for ease of app password
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+});
+
 // Authentication Middleware
 function requireAuth(req, res, next) {
   if (req.session && req.session.userId) {
@@ -86,10 +97,17 @@ app.post("/login", async (req, res) => {
   const user = users.find(u => u.username === username);
 
   if (user) {
+    if (!user.approved) {
+      errors.push("Account strictly pending internal administrator approval.");
+      return res.send(renderAuthPage({ type: 'login', errors, formData: { username } }));
+    }
+
     const match = await bcrypt.compare(password, user.passwordHash);
     if (match) {
       req.session.userId = user.id;
       req.session.username = user.username;
+      
+      // Clean up unverified attempts array in prod, but redirect for now
       return res.redirect("/");
     }
   }
@@ -123,17 +141,68 @@ app.post("/register", async (req, res) => {
 
   try {
     const passwordHash = await bcrypt.hash(password, 10);
+    const newUserId = Date.now().toString();
     users.push({
-      id: Date.now().toString(),
+      id: newUserId,
       username,
-      passwordHash
+      passwordHash,
+      approved: false // Must be approved by admin
     });
     saveUsers(users);
-    res.redirect("/login");
+
+    // Send admin notification
+    const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+    const approvalLink = `http://${req.headers.host}/approve/${newUserId}`;
+    
+    // Non-blocking mail dispatch
+    if (adminEmail && process.env.SMTP_PASS) {
+      transporter.sendMail({
+        from: `"Nexus System" <${process.env.SMTP_USER}>`,
+        to: adminEmail,
+        subject: `New Board Member Registered: ${username}`,
+        html: `
+          <h3>Security Alert: New Registration</h3>
+          <p>A new user has requested access to the Nexus Payment terminal.</p>
+          <p><strong>System ID (Username):</strong> ${username}</p>
+          <hr/>
+          <p>To grant secure access to this user, click the authorization link below:</p>
+          <a href="${approvalLink}" style="display:inline-block;padding:10px 20px;background:#1a427a;color:#fff;text-decoration:none;border-radius:5px;">Approve User</a>
+          <br/><br/>
+          <p><small>If you do not recognize this request, ignore this email.</small></p>
+        `
+      }).catch(e => console.error("Email failed:", e));
+    }
+
+    // Pass highly specific success flag or redirect back to login
+    res.send(renderAuthPage({ type: 'login', errors: ["Account successfully generated. Please wait for internal administrator approval to log in."], formData: { username } }));
   } catch (err) {
     errors.push("Internal system fault during registration.");
     res.send(renderAuthPage({ type: 'register', errors, formData: { username } }));
   }
+});
+
+app.get("/approve/:id", (req, res) => {
+  const users = loadUsers();
+  const userIndex = users.findIndex(u => u.id === req.params.id);
+  
+  if (userIndex === -1) {
+    return res.status(404).send("<h1>User Not Found</h1><p>The link might be invalid or expired.</p>");
+  }
+
+  if (users[userIndex].approved) {
+    return res.send("<h1>Already Approved</h1><p>This user has already been granted access.</p>");
+  }
+
+  // Grant access
+  users[userIndex].approved = true;
+  saveUsers(users);
+
+  res.send(`
+    <div style="font-family: Arial, sans-serif; text-align: center; margin-top: 50px;">
+      <h1 style="color: #4CAF50;">Authentication Authorized</h1>
+      <p>The user <strong>${users[userIndex].username}</strong> is now cleared to access the Nexus Payment terminal.</p>
+    </div>
+  `);
 });
 
 app.get("/logout", (req, res) => {
