@@ -323,33 +323,137 @@ function renderInvoice({
   <title>Invoice</title>
   <style>
     /* Basic PDF Styling kept safe for Puppeteer Engine */
-    .invoice-page { background: #fff; color: #333; margin: 0; padding: 0; font-family: sans-serif; }
-    .invoice-sheet { width: 100%; max-width: 800px; margin: 0 auto; }
-    .banner-container { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
-    .banner-image { max-width: 300px; max-height: 80px; object-fit: contain; }
-    .logo-image { max-width: 150px; max-height: 80px; object-fit: contain; }
-    .title-section { margin-bottom: 2rem; }
-    .invoice-title { font-size: 2rem; font-weight: bold; color: #111; text-transform: uppercase; margin-bottom: 0.5rem; }
-    .invoice-date strong { color: #111; }
-    .info-columns { display: flex; justify-content: space-between; margin-bottom: 2rem; }
-    .info-heading { font-weight: bold; color: #666; text-transform: uppercase; font-size: 0.85rem; margin-bottom: 0.2rem; }
-    .info-value { font-size: 1.1rem; color: #111; }
-    .items-table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
-    .items-table th { background-color: #f4f4f4; text-align: left; padding: 10px; font-weight: bold; border-bottom: 2px solid #ddd; }
+    .invoice-page {
+      background: #fff;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      font-family: inherit;
+    }
+    .invoice-sheet {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      font-family: inherit;
+    }
+    .banner-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+    .banner-image {
+      max-width: 300px;
+      max-height: 80px;
+      object-fit: contain;
+    }
+    .logo-image {
+      max-width: 150px;
+      max-height: 80px;
+      object-fit: contain;
+    }
+    .title-section {
+      margin-bottom: 2rem;
+    }
+    .invoice-title {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #111;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .invoice-date strong {
+      color: #111;
+    }
+    .info-columns {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+    .info-heading {
+      font-weight: bold;
+      color: #666;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      margin-bottom: 0.2rem;
+    }
+    .info-value {
+      font-size: 1.1rem;
+      color: #111;
+    }
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 2rem;
+    }
+    .items-table th {
+      background-color: #f4f4f4;
+      text-align: left;
+      padding: 10px;
+      font-weight: bold;
+      border-bottom: 2px solid #ddd;
+    }
     .col-desc { width: 70%; }
     .col-amt { width: 30%; text-align: right; }
-    .bordered-cell { border-bottom: 1px solid #eee; padding: 12px 10px; }
-    .items-table td.desc { font-weight: 500; color: #333; }
-    .items-table td.amt { text-align: right; color: #333; }
-    .amt-content { display: flex; justify-content: space-between; }
-    .total-label { text-align: right; padding: 10px; color: #666; font-weight: bold; }
-    .empty-row td { padding: 20px 10px; }
-    .total-label-dark { text-align: right; padding: 12px 10px; background-color: #333; color: #fff; font-weight: bold; border-radius: 4px 0 0 4px; }
-    .amt-dark { background-color: #333; color: #fff !important; padding: 12px 10px; font-weight: bold; border-radius: 0 4px 4px 0; }
-    .amt-dark .amt-content { display: flex; justify-content: space-between; }
-    .footer-notes { border-top: 1px solid #ddd; padding-top: 1.5rem; font-size: 0.9rem; color: #555; }
-    .contact-info { margin: 0.5rem 0; font-weight: 500; }
-    .contact-info a { color: #111; text-decoration: none; }
+    .bordered-cell {
+      border-bottom: 1px solid #eee;
+      padding: 12px 10px;
+    }
+    .items-table td.desc {
+      font-weight: 500;
+      color: #333;
+    }
+    .items-table td.amt {
+      text-align: right;
+      color: #333;
+    }
+    .amt-content {
+      display: flex;
+      justify-content: space-between;
+    }
+    .empty-row td {
+      padding: 20px 10px;
+    }
+    .total-label {
+      text-align: right;
+      padding: 10px;
+      color: #666;
+      font-weight: bold;
+    }
+    .total-label-dark {
+      text-align: right;
+      padding: 12px 10px;
+      background-color: #333;
+      color: #fff;
+      font-weight: bold;
+      border-radius: 4px 0 0 4px;
+    }
+    .amt-dark {
+      background-color: #333;
+      color: #fff !important;
+      padding: 12px 10px;
+      font-weight: bold;
+      border-radius: 0 4px 4px 0;
+    }
+    .amt-dark .amt-content {
+      display: flex;
+      justify-content: space-between;
+    }
+    .footer-notes {
+      border-top: 1px solid #ddd;
+      padding-top: 1.5rem;
+      font-size: 0.9rem;
+      color: #555;
+    }
+    .contact-info {
+      margin: 0.5rem 0;
+      font-weight: 500;
+    }
+    .contact-info a {
+      color: #111;
+      text-decoration: none;
+    }
+    ${styleContent}
   </style>
 </head>
 <body class="invoice-page">
