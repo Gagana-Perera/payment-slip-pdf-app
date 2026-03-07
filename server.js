@@ -1,9 +1,8 @@
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
-const ejs = require("ejs");
 const puppeteer = require("puppeteer");
-
+const { renderForm, renderInvoice } = require("./views/templates");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -21,9 +20,6 @@ const MONTHS = [
   "November",
   "December",
 ];
-
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
@@ -108,11 +104,11 @@ function imagePathToDataUri(imagePath) {
 }
 
 app.get("/", (req, res) => {
-  res.render("form", {
+  res.send(renderForm({
     errors: [],
     formData: { name: "", date: "", amount: "", months: [] },
     months: MONTHS,
-  });
+  }));
 });
 
 app.post("/generate", async (req, res) => {
@@ -143,7 +139,7 @@ app.post("/generate", async (req, res) => {
     errors.push("At least one month must be selected.");
 
   if (errors.length > 0) {
-    return res.status(400).render("form", {
+    return res.status(400).send(renderForm({
       errors,
       formData: {
         name,
@@ -152,7 +148,7 @@ app.post("/generate", async (req, res) => {
         months: selectedMonths,
       },
       months: MONTHS,
-    });
+    }));
   }
 
   try {
@@ -163,19 +159,16 @@ app.post("/generate", async (req, res) => {
     const selectedMonthsText = selectedMonths.join(", ");
     const headerImages = getHeaderImages();
 
-    const html = await ejs.renderFile(
-      path.join(__dirname, "views", "invoice.ejs"),
-      {
-        invoiceNumber: generateInvoiceNumber(),
-        customerName: name,
-        paymentDate: toDisplayDate(date),
-        selectedMonthsText,
-        amountText: amount.toFixed(2),
-        styleContent,
-        bannerImageSrc: imagePathToDataUri(headerImages.bannerImagePath),
-        logoImageSrc: imagePathToDataUri(headerImages.logoImagePath),
-      },
-    );
+    const html = renderInvoice({
+      invoiceNumber: generateInvoiceNumber(),
+      customerName: name,
+      paymentDate: toDisplayDate(date),
+      selectedMonthsText,
+      amountText: amount.toFixed(2),
+      styleContent,
+      bannerImageSrc: imagePathToDataUri(headerImages.bannerImagePath),
+      logoImageSrc: imagePathToDataUri(headerImages.logoImagePath),
+    });
 
     const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
