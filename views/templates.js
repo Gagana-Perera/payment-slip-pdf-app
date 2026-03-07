@@ -302,25 +302,23 @@ function renderForm({ errors = [], formData = {}, months = [] }) {
 }
 
 // renderInvoice is responsible for generating the HTML for the PDF invoice
-const renderInvoice = (data, styleContent, bannerImage, logoImage) => {
-  const { invoiceType, name, date, amount, months } = data;
-  
+const renderInvoice = ({
+  invoiceNumber,
+  customerName: name,
+  paymentDate: date,
+  invoiceType,
+  selectedMonthsText,
+  amountText: amount,
+  styleContent,
+  bannerImageSrc: bannerImage,
+  logoImageSrc: logoImage
+}) => {
   // Format amount with commas
   const amountNum = parseFloat(amount);
-  const amountText = !isNaN(amountNum) ? amountNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : amount;
-
-  // Format months
-  let selectedMonthsText = '';
-  if (invoiceType === 'Monthly Subscription' && Array.isArray(months) && months.length > 0) {
-    if (months.length === 1) {
-      selectedMonthsText = months[0];
-    } else {
-      selectedMonthsText = `${months[0]} - ${months[months.length - 1]}`;
-    }
-  }
+  const formattedAmount = !isNaN(amountNum) ? amountNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : amount;
 
   // Use a simpler date format directly without invoice number
-  const formattedDate = date ? new Date(date).toLocaleDateString('en-GB') : '';
+  const formattedDate = date ? date : '';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -537,7 +535,7 @@ const renderInvoice = (data, styleContent, bannerImage, logoImage) => {
             ${escapeHtml(invoiceType === 'Monthly Subscription' ? 'Monthly Subscription' : 'T-Shirt Payment')}
             ${selectedMonthsText ? ` (${escapeHtml(selectedMonthsText)})` : ''}
           </td>
-          <td class="amt"><div class="amt-content"><span>LKR</span> <span>${escapeHtml(amountText)}</span></div></td>
+          <td class="amt"><div class="amt-content"><span>LKR</span> <span>${escapeHtml(formattedAmount)}</span></div></td>
         </tr>
         <tr class="empty-row">
           <td class="desc"></td>
@@ -545,7 +543,7 @@ const renderInvoice = (data, styleContent, bannerImage, logoImage) => {
         </tr>
         <tr class="total-row">
           <td class="total-label">Subtotal</td>
-          <td class="amt-box"><div class="amt-content"><span>LKR</span> <span>${escapeHtml(amountText)}</span></div></td>
+          <td class="amt-box"><div class="amt-content"><span>LKR</span> <span>${escapeHtml(formattedAmount)}</span></div></td>
         </tr>
         <tr class="total-row">
           <td class="total-label">Tax Rate</td>
@@ -557,7 +555,7 @@ const renderInvoice = (data, styleContent, bannerImage, logoImage) => {
         </tr>
         <tr class="total-cost-row">
           <td class="total-label-huge">Total Cost</td>
-          <td class="amt-dark"><div class="amt-content"><span>LKR</span> <span>${escapeHtml(amountText)}</span></div></td>
+          <td class="amt-dark"><div class="amt-content"><span>LKR</span> <span>${escapeHtml(formattedAmount)}</span></div></td>
         </tr>
       </tbody>
     </table>
