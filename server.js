@@ -106,7 +106,7 @@ function imagePathToDataUri(imagePath) {
 app.get("/", (req, res) => {
   res.send(renderForm({
     errors: [],
-    formData: { name: "", date: "", amount: "", months: [] },
+    formData: { name: "", date: "", amount: "", invoiceType: "Monthly Subscription", months: [] },
     months: MONTHS,
   }));
 });
@@ -118,6 +118,7 @@ app.post("/generate", async (req, res) => {
   const date = req.body.date || "";
   const amountInput = req.body.amount;
   const amount = Number.parseFloat(amountInput);
+  const invoiceType = req.body.invoiceType || "Monthly Subscription";
 
   const submittedMonths = Array.isArray(req.body.months)
     ? req.body.months
@@ -135,8 +136,10 @@ app.post("/generate", async (req, res) => {
     errors.push("Date is invalid.");
   if (!Number.isFinite(amount) || amount <= 0)
     errors.push("Amount must be a number greater than 0.");
-  if (selectedMonths.length === 0)
-    errors.push("At least one month must be selected.");
+    
+  if (invoiceType === "Monthly Subscription" && selectedMonths.length === 0) {
+    errors.push("At least one month must be selected for Monthly Subscriptions.");
+  }
 
   if (errors.length > 0) {
     return res.status(400).send(renderForm({
@@ -145,6 +148,7 @@ app.post("/generate", async (req, res) => {
         name,
         date,
         amount: amountInput,
+        invoiceType,
         months: selectedMonths,
       },
       months: MONTHS,
@@ -163,6 +167,7 @@ app.post("/generate", async (req, res) => {
       invoiceNumber: generateInvoiceNumber(),
       customerName: name,
       paymentDate: toDisplayDate(date),
+      invoiceType,
       selectedMonthsText,
       amountText: amount.toFixed(2),
       styleContent,

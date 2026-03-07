@@ -9,7 +9,7 @@ function escapeHtml(unsafe) {
 }
 
 function renderForm({ errors = [], formData = {}, months = [] }) {
-  const { name = "", date = "", amount = "", months: selectedMonths = [] } = formData;
+  const { name = "", date = "", amount = "", invoiceType = "Monthly Subscription", months: selectedMonths = [] } = formData;
   
   const errorHtml = errors.length > 0 ? `
       <div class="alert" role="alert">
@@ -45,6 +45,14 @@ function renderForm({ errors = [], formData = {}, months = [] }) {
 ${errorHtml}
     <form action="/generate" method="POST" class="form-grid">
       <div class="field">
+        <label for="invoiceType">Invoice Type</label>
+        <select id="invoiceType" name="invoiceType" required>
+          <option value="Monthly Subscription" ${invoiceType === 'Monthly Subscription' ? 'selected' : ''}>Monthly Subscription</option>
+          <option value="T-Shirt Payment" ${invoiceType === 'T-Shirt Payment' ? 'selected' : ''}>T-Shirt Payment</option>
+        </select>
+      </div>
+
+      <div class="field">
         <label for="name">Name</label>
         <input type="text" id="name" name="name" value="${escapeHtml(name)}" required />
       </div>
@@ -59,7 +67,7 @@ ${errorHtml}
         <input type="number" id="amount" name="amount" min="0.01" step="0.01" value="${escapeHtml(amount)}" required />
       </div>
 
-      <fieldset class="field months-field">
+      <fieldset class="field months-field" id="monthsFieldset" style="${invoiceType === 'T-Shirt Payment' ? 'display: none;' : ''}">
         <legend>Months</legend>
         <div class="months-grid">
 ${monthsHtml}
@@ -69,6 +77,23 @@ ${monthsHtml}
       <button type="submit" class="btn">Generate & Download PDF</button>
     </form>
   </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const invoiceTypeSelect = document.getElementById("invoiceType");
+      const monthsFieldset = document.getElementById("monthsFieldset");
+      
+      function toggleMonthsVisibility() {
+        if (invoiceTypeSelect.value === "T-Shirt Payment") {
+          monthsFieldset.style.display = "none";
+        } else {
+          monthsFieldset.style.display = "block";
+        }
+      }
+
+      invoiceTypeSelect.addEventListener("change", toggleMonthsVisibility);
+    });
+  </script>
 </body>
 </html>`;
 }
@@ -77,6 +102,7 @@ function renderInvoice({
   invoiceNumber,
   customerName,
   paymentDate,
+  invoiceType,
   selectedMonthsText,
   amountText,
   styleContent,
@@ -119,7 +145,7 @@ function renderInvoice({
       </div>
       <div class="col-right">
         <div class="info-heading">For</div>
-        <div class="info-value">Monthly subscription</div>
+        <div class="info-value">${escapeHtml(invoiceType)}</div>
       </div>
     </div>
 
@@ -133,7 +159,7 @@ function renderInvoice({
       </thead>
       <tbody>
         <tr>
-          <td class="desc bordered-cell">Monthly Subscription (${escapeHtml(selectedMonthsText)})</td>
+          <td class="desc bordered-cell">${escapeHtml(invoiceType)}${selectedMonthsText ? ` (${escapeHtml(selectedMonthsText)})` : ''}</td>
           <td class="amt bordered-cell"><div class="amt-content"><span>LKR</span> <span>${escapeHtml(amountText)}</span></div></td>
         </tr>
         <tr class="empty-row">
